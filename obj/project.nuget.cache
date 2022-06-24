@@ -1,8 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "LimaN+N4Pf7diINQGZFdA8f2XIrnlwYuWMxpxpgcpKSfQ4cJTqzp6cKefxG2Mv0mgAski3cng/Pu+Vob3OLWjg==",
+  "dgSpecHash": "duTzfRKztwFghMkwyjeekXMb06QZqrYzn6vnWBlj+KlS6WIIwGXskUbx2ln5ci8ApFxKbAqgF2MuRES34ePf0A==",
   "success": true,
   "projectFilePath": "/Users/mozartgil/Dropbox/Dev/2022/Mega do Mozao/Mega do Mozao.csproj",
-  "expectedPackageFiles": [],
+  "expectedPackageFiles": [
+    "/Users/mozartgil/.nuget/packages/newtonsoft.json/13.0.1/newtonsoft.json.13.0.1.nupkg.sha512"
+  ],
   "logs": []
 }

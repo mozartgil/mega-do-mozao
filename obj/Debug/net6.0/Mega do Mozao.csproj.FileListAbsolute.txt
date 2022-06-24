@@ -13,3 +13,5 @@
 /Users/mozartgil/Dropbox/Dev/2022/Mega do Mozao/obj/Debug/net6.0/Mega do Mozao.pdb
 /Users/mozartgil/Dropbox/Dev/2022/Mega do Mozao/obj/Debug/net6.0/Mega do Mozao.genruntimeconfig.cache
 /Users/mozartgil/Dropbox/Dev/2022/Mega do Mozao/obj/Debug/net6.0/ref/Mega do Mozao.dll
+/Users/mozartgil/Dropbox/Dev/2022/Mega do Mozao/bin/Debug/net6.0/Newtonsoft.Json.dll
+/Users/mozartgil/Dropbox/Dev/2022/Mega do Mozao/obj/Debug/net6.0/Mega do Mozao.csproj.CopyComplete

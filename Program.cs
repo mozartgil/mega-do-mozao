@@ -1,6 +1,5 @@
-﻿using System.Text.Json;
-using System.Collections.Generic;
-using System.Text;
+﻿
+using Newtonsoft.Json;
 using Validacao;
 
 class MegaDoMozao
@@ -8,47 +7,109 @@ class MegaDoMozao
     public static void Main()
     {
         Console.Clear();
+        var nomeArquivoJogo = "Mega.json";
+        var nomeArquivoJogadores = "Jogadores.json";
+        var keyOption = "1";
 
-        // Gerando um novo jogo da Mega
-        var strNovoJogoMega = NovoJogoMega();
-        var jsonNovoJogoMega = JsonSerializer.Deserialize<JogoMega>(strNovoJogoMega);
-        var listaNumerosSorteados = jsonNovoJogoMega.ListNumerosSorteados.ToList();
+        Console.WriteLine("Bem vindo à MEGA DO MOZAO!");
+        Console.WriteLine("--------------------------");
 
-        //Gerando um novo jogador
-        var strNovoJogador = NovoJogador(jsonNovoJogoMega.idJogoMega);
-        var jsonNovoJogador = JsonSerializer.Deserialize<JogadorMega>(strNovoJogador);
-        var listJogo = jsonNovoJogador.numerosEscolhidos.ToList();
+        while (keyOption != "3")
+        {
+            //Chamando MENU principal e retornando opção do usuário
+            keyOption = OpcaoMega(nomeArquivoJogo);
 
-        //Validando quantos números foram acertados
-        int quantidadeNumerosAcertados = 0;
-        
-        
+            //Caso 1 - lê o arquivo já existente
+            //Caso 2 - cria o arquivo e retorna os dados criados
+            //Caso 3 - Sorteio do jogo
+            var strJogoMega = "";
 
-        foreach (var numero in listJogo) {
-            if (listaNumerosSorteados.Contains(numero)) {
-                quantidadeNumerosAcertados++;
+            if (keyOption == "1" || keyOption == "3")
+            {
+                strJogoMega = File.ReadAllText(nomeArquivoJogo);
+            }
+            else if (keyOption == "2")
+            {
+                strJogoMega = NovoJogoMega(nomeArquivoJogo, nomeArquivoJogadores);
+            }
+
+            var jsonJogoMega = JsonConvert.DeserializeObject<JogoMega>(strJogoMega);
+
+            //Criando um novo jogador
+            if (keyOption == "1" || keyOption == "2")
+            {
+                var strNovoJogador = NovoJogador(jsonJogoMega.idJogoMega, nomeArquivoJogadores, jsonJogoMega.ListNumerosSorteados);
             }
         }
 
-        //Mensagens das premiaçÕes
-        if (quantidadeNumerosAcertados == 0) {
-            Console.WriteLine("Infelizmente não foi desta vez. Tente novamente");
-        } else if (quantidadeNumerosAcertados >= 1 && quantidadeNumerosAcertados <= 3) {
-            Console.WriteLine($"Você acertou {quantidadeNumerosAcertados} números mas infelizmente não foi desta vez. Tente novamente");
-        } else if (quantidadeNumerosAcertados == 4) {
-            Console.WriteLine("PARABÉNS! Você acertou uma QUADRA!!!");
-        } else if (quantidadeNumerosAcertados == 5) {
-            Console.WriteLine("PARABÉNS! Você acertou uma QUINA!!!");
-        } else if (quantidadeNumerosAcertados == 6) {
-            Console.WriteLine("PARABÉNS! VOCÊ GANHOU NA MEGA DO MOZÃO!!!");
+        //SORTEIO DA MEGA
+        if (keyOption == "3")
+        {
+            var strListaJogadores = File.ReadAllText(nomeArquivoJogadores);
+            var jsonListaJogadores = JsonConvert.DeserializeObject<List<JogadorMega>>(strListaJogadores);
+
+            //Selecionando jogadores que tiveram +3 acertos
+            var resultadoVencedores = jsonListaJogadores.Where(vencedor => vencedor.QtdNumerosAcerto > 3)
+                                                        .OrderByDescending(vencedor => vencedor.QtdNumerosAcerto)
+                                                        .ToList();
+            
+            if (resultadoVencedores.Count > 0) {
+                foreach (var vencedor in resultadoVencedores)
+                {
+                    Console.WriteLine($"O jogador {vencedor.CPF} teve {vencedor.QtdNumerosAcerto} ACERTOS no jogo {vencedor.idJogo}!");
+                    Console.WriteLine(MensagensAcertos(vencedor.QtdNumerosAcerto));
+                    Console.WriteLine("-------------------------");
+                    Console.WriteLine("");
+                }
+            } else {
+                Console.WriteLine("Não houve nenhum vencedor da MEGA!");
+                Console.WriteLine("-------------------------");
+                Console.WriteLine("");
+            }
         }
     }
 
-    public static string NovoJogoMega()
+    //Verificando se já existe alguma Jogo da Mega Ativo
+    public static string OpcaoMega(string nomeArquivoJogo)
+    {
+        var keyOption = "0";
+
+        if (File.Exists(nomeArquivoJogo))
+        {
+            Console.WriteLine("Já existe uma série da MEGA DO MOZAO ativa.");
+            Console.WriteLine("Tecle 1 para jogar nessa MEGA DO MOZAO ativa");
+            Console.WriteLine("Tecle 2 para jogar gerar uma nova MEGA DO MOZAO");
+            Console.WriteLine("Tecle 3 para realizar o SORTEIO da MEGA DO MOZAO");
+            Console.WriteLine("--------------------------");
+            Console.Write("Opção: ");
+            keyOption = Console.ReadLine();
+            Console.WriteLine("--------------------------");
+
+            while (!ValidaNumeroEscolhido(1, 3, keyOption))
+            {
+                Console.WriteLine("");
+                Console.WriteLine("Por favor, informe uma opção válida!");
+                Console.WriteLine("Tecle 1 para jogar nessa MEGA DO MOZAO ativa");
+                Console.WriteLine("Tecle 2 para jogar gerar uma nova MEGA DO MOZAO");
+                Console.WriteLine("Tecle 3 para realizar o SORTEIO da MEGA DO MOZAO");
+                Console.WriteLine("--------------------------");
+                Console.Write("Opção: ");
+                keyOption = Console.ReadLine();
+                Console.WriteLine("--------------------------");
+            }
+        }
+        else
+        {
+            keyOption = "2";
+        }
+
+        return keyOption;
+    }
+
+    public static string NovoJogoMega(string nomeArquivoJogo, string nomeArquivoJogadores)
     {
         //ID da Mega
-        var randomID = new Random();
-        var idJogo = randomID.Next();
+        var idJogo = GetNewID();
 
         //Gerando números Aleatórios da Mega
         var randomNumeros = new Random();
@@ -64,7 +125,7 @@ class MegaDoMozao
                 listaNumerosSorteados.Add(numeroSorteado);
         }
 
-         //COMENTAR BLOCO ABAIXO!!!
+        //COMENTAR BLOCO ABAIXO!!!
         Console.WriteLine("NÚMEROS SORTEADOS:");
         foreach (var numero in listaNumerosSorteados)
         {
@@ -76,16 +137,14 @@ class MegaDoMozao
 
         var novoJogoMega = new JogoMega(idJogo, listaNumerosSorteados.ToList());
 
-        //Serializando o Jogo da Mega
-        dynamic jsonNovoJogoMega = JsonSerializer.Serialize(novoJogoMega);
-        
         //Escrevendo o novo jogo
-        var nomeArquivoJogo = "Mega.json";
         File.Create(nomeArquivoJogo).Close();
+
+        //Serializando o Jogo da Mega
+        var jsonNovoJogoMega = JsonConvert.SerializeObject(novoJogoMega, Formatting.Indented);
         File.AppendAllText(nomeArquivoJogo, jsonNovoJogoMega);
 
         //Zerando os jogadores
-        var nomeArquivoJogadores = "Jogadores.json";
         File.Create(nomeArquivoJogadores).Close();
 
         //Retornando a string serializada do jogo da MEga
@@ -97,17 +156,20 @@ class MegaDoMozao
         public long idJogoMega { get; set; }
         public List<int> ListNumerosSorteados { get; set; }
 
-        public DateTime datadoJogo { get; private set; }
+        public DateTime datadoJogo { get; set; }
         public JogoMega(long idJogoMega, List<int> listNumerosSorteados)
         {
             this.ListNumerosSorteados = listNumerosSorteados;
             this.idJogoMega = idJogoMega;
             datadoJogo = DateTime.Now;
         }
+
+        public JogoMega() { }
     }
 
-    public static string NovoJogador(long idJogoMega)
+    public static bool NovoJogador(long idJogoMega, string nomeArquivoJogadores, List<int> numerosSorteados)
     {
+        var jogadorValido = false;
         var jogadorCPF = "";
 
         Console.Write("Informe o CPF do jogador: ");
@@ -123,7 +185,7 @@ class MegaDoMozao
         Console.WriteLine("---------");
         Console.WriteLine("");
 
-        var jogoA = new List<int>();
+        var jogo = new List<int>();
         var numeroMinimo = 1; //Número mínimo da cartela
         var numeroMaximo = 60; //Número máximo da cartela
         var qtdNumerosParaEscolher = 6; //Números a serem escolhidos pelo cliente  var numeroValido = false; //Valida se o INPUT é um número válido 
@@ -153,7 +215,7 @@ class MegaDoMozao
                 numeroEscolhido = int.Parse(strNumeroEscolhido);
 
                 //Validando se o número escolhido já não foi escolhido antes
-                if (jogoA.Contains(numeroEscolhido))
+                if (jogo.Contains(numeroEscolhido))
                 {
                     Console.WriteLine($"O número {numeroEscolhido} já foi escolhido. Por favor escolha outro!");
                     numeroValido = false;
@@ -164,13 +226,13 @@ class MegaDoMozao
                 }
             }
 
-            jogoA.Add(numeroEscolhido);
+            jogo.Add(numeroEscolhido);
         }
 
         //COMENTAR BLOCO ABAIXO!!!
         Console.WriteLine("");
         Console.WriteLine("NÚMEROS ESCOLHIDOS!");
-        foreach (var numero in jogoA)
+        foreach (var numero in jogo)
         {
             Console.Write($"{numero} - ");
         }
@@ -178,18 +240,28 @@ class MegaDoMozao
         Console.WriteLine("---------");
         Console.WriteLine("");
 
-        var cliente = new JogadorMega(jogadorCPF, jogoA, idJogoMega);
+        //Verificando quantos números o jogador acertou neste jogo
+        var qtdNumerosAcerto = NumerosAcertados(idJogoMega, numerosSorteados, jogo);
 
-        var jsonNovoCliente = JsonSerializer.Serialize(cliente);
+        var novoJogador = new JogadorMega(jogadorCPF, jogo, idJogoMega, qtdNumerosAcerto, nomeArquivoJogadores);
 
-        var nomeArquivoJogadores = "Jogadores.json";
-        File.AppendAllText(nomeArquivoJogadores, jsonNovoCliente);
+        //Pegando o que tem dentro do Json de Jogadores
+        var listaJogadoresMega = new List<JogadorMega>();
+        var jsonJogadores = File.ReadAllText(nomeArquivoJogadores);
 
-        return jsonNovoCliente;
-    }
+        if (new FileInfo(nomeArquivoJogadores).Length > 0)
+            listaJogadoresMega = JsonConvert.DeserializeObject<List<JogadorMega>>(jsonJogadores);
 
-    public class JogadoresMega {
-        public List<JogadorMega> JogadorMega { get; set; }
+        listaJogadoresMega.Add(novoJogador);
+
+        var jsonListaJogadores = JsonConvert.SerializeObject(listaJogadoresMega, Formatting.Indented);
+
+        File.Create(nomeArquivoJogadores).Close();
+        File.AppendAllText(nomeArquivoJogadores, jsonListaJogadores);
+
+        jogadorValido = true;
+
+        return jogadorValido;
     }
 
     public class JogadorMega
@@ -197,16 +269,32 @@ class MegaDoMozao
         public string CPF { get; set; }
         public List<Int32> numerosEscolhidos { get; set; }
         public long IdJogoMega { get; set; }
+        public DateTime dataDoJogo { get; set; }
+        public long idJogo { get; set; }
+        public int QtdNumerosAcerto { get; set; }
 
-        public DateTime dataDoJogo { get; private set; }
-
-        public JogadorMega(string CPF, List<Int32> numerosEscolhidos, long idJogoMega)
+        public JogadorMega(string CPF, List<Int32> numerosEscolhidos, long idJogoMega, int qtdNumerosAcerto, string nomeArquivoJogadores)
         {
+            this.QtdNumerosAcerto = qtdNumerosAcerto;
             this.IdJogoMega = idJogoMega;
             this.CPF = CPF;
             this.numerosEscolhidos = numerosEscolhidos;
             dataDoJogo = DateTime.Now;
+
+            var novoIDJogo = GetNewID();
+
+            novoIDJogo = 1072292802;
+
+            while (!ValidaNovoIDJogador(nomeArquivoJogadores, novoIDJogo)) {
+                // Console.WriteLine("PASSOU PELO ID REPETIDO");
+                novoIDJogo = GetNewID();
+            }
+
+            // Console.WriteLine("SEGUIU PELO ID REPETIDO");
+            idJogo = novoIDJogo;
         }
+
+        public JogadorMega() { }
     }
 
     //Validação do número escolihido pelo cliente
@@ -227,7 +315,7 @@ class MegaDoMozao
         }
 
         //Validando se o número escolhido se encaixa entre numeroMinimo e numeroMaximo
-        if (numeroEscolhido < 0 || numeroEscolhido > 60)
+        if (numeroEscolhido < numeroMinimo || numeroEscolhido > numeroMaximo)
         {
             return false;
         }
@@ -254,5 +342,78 @@ class MegaDoMozao
             numeroOrdinal = "sexto";
 
         return numeroOrdinal;
+    }
+
+    public static int GetNewID()
+    {
+        var randomID = new Random();
+        var idJogo = randomID.Next();
+
+        return idJogo;
+    }
+
+    public static bool ValidaNovoIDJogador(string nomeArquivoJogadores, int newID) {
+        var idValido = true;
+
+        //Pegando o que tem dentro do Json de Jogadores
+        var listaJogadoresMega = new List<JogadorMega>();
+        var jsonJogadores = File.ReadAllText(nomeArquivoJogadores);
+
+        if (new FileInfo(nomeArquivoJogadores).Length > 0) {
+            listaJogadoresMega = JsonConvert.DeserializeObject<List<JogadorMega>>(jsonJogadores);
+
+            foreach (var jogador in listaJogadoresMega)
+            {
+                if (jogador.idJogo == newID)
+                {
+                    return false;
+                }
+            }
+        }
+
+        return idValido;
+    }
+
+    public static int NumerosAcertados(long idJogoMega, List<int> numerosSorteados, List<int> numerosEscolhidos)
+    {
+        var qtdNumerosAcerto = 0;
+
+        foreach (var numero in numerosEscolhidos)
+        {
+            if (numerosSorteados.Contains(numero))
+            {
+                qtdNumerosAcerto++;
+            }
+        }
+
+        return qtdNumerosAcerto;
+    }
+
+    public static string MensagensAcertos(int quantidadeAcertos) {
+        //Mensagens das premiaçÕes
+        var mensagemAcerto = "";
+
+        if (quantidadeAcertos == 0)
+        {
+            mensagemAcerto = "Infelizmente não foi desta vez. Tente novamente";
+        }
+        else if (quantidadeAcertos >= 1 && quantidadeAcertos <= 3)
+        {
+            mensagemAcerto = $"Você acertou {quantidadeAcertos} números mas infelizmente não foi desta vez. Tente novamente";
+        }
+        else if (quantidadeAcertos == 4)
+        {
+            mensagemAcerto = "PARABÉNS! Você acertou uma QUADRA!!!";
+        }
+        else if (quantidadeAcertos == 5)
+        {
+            mensagemAcerto = "PARABÉNS! Você acertou uma QUINA!!!";
+        }
+        else if (quantidadeAcertos == 6)
+        {
+            mensagemAcerto = "PARABÉNS! VOCÊ GANHOU NA MEGA DO MOZÃO!!!";
+        }
+
+        return mensagemAcerto;
     }
 }
