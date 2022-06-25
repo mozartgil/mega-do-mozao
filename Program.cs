@@ -1,5 +1,6 @@
 ﻿
-using Newtonsoft.Json;
+//using Newtonsoft.Json;
+using System.Text.Json;
 using Validacao;
 
 class MegaDoMozao
@@ -33,7 +34,8 @@ class MegaDoMozao
                 strJogoMega = NovoJogoMega(nomeArquivoJogo, nomeArquivoJogadores);
             }
 
-            var jsonJogoMega = JsonConvert.DeserializeObject<JogoMega>(strJogoMega);
+            // var jsonJogoMega = JsonConvert.DeserializeObject<JogoMega>(strJogoMega);
+            var jsonJogoMega = JsonSerializer.Deserialize<JogoMega>(strJogoMega);
 
             //Criando um novo jogador
             if (keyOption == "1" || keyOption == "2")
@@ -46,7 +48,8 @@ class MegaDoMozao
         if (keyOption == "3")
         {
             var strListaJogadores = File.ReadAllText(nomeArquivoJogadores);
-            var jsonListaJogadores = JsonConvert.DeserializeObject<List<JogadorMega>>(strListaJogadores);
+            // var jsonListaJogadores = JsonConvert.DeserializeObject<List<JogadorMega>>(strListaJogadores);
+            var jsonListaJogadores = JsonSerializer.Deserialize<List<JogadorMega>>(strListaJogadores);
 
             //Selecionando jogadores que tiveram +3 acertos
             var resultadoVencedores = jsonListaJogadores.Where(vencedor => vencedor.QtdNumerosAcerto > 3)
@@ -141,7 +144,8 @@ class MegaDoMozao
         File.Create(nomeArquivoJogo).Close();
 
         //Serializando o Jogo da Mega
-        var jsonNovoJogoMega = JsonConvert.SerializeObject(novoJogoMega, Formatting.Indented);
+        // var jsonNovoJogoMega = JsonConvert.SerializeObject(novoJogoMega, Formatting.Indented);
+        var jsonNovoJogoMega = JsonSerializer.Serialize(novoJogoMega);
         File.AppendAllText(nomeArquivoJogo, jsonNovoJogoMega);
 
         //Zerando os jogadores
@@ -249,12 +253,15 @@ class MegaDoMozao
         var listaJogadoresMega = new List<JogadorMega>();
         var jsonJogadores = File.ReadAllText(nomeArquivoJogadores);
 
-        if (new FileInfo(nomeArquivoJogadores).Length > 0)
-            listaJogadoresMega = JsonConvert.DeserializeObject<List<JogadorMega>>(jsonJogadores);
+        if (new FileInfo(nomeArquivoJogadores).Length > 0) {
+            // listaJogadoresMega = JsonConvert.DeserializeObject<List<JogadorMega>>(jsonJogadores);
+            listaJogadoresMega = JsonSerializer.Deserialize<List<JogadorMega>>(jsonJogadores);
+        }
 
         listaJogadoresMega.Add(novoJogador);
 
-        var jsonListaJogadores = JsonConvert.SerializeObject(listaJogadoresMega, Formatting.Indented);
+        // var jsonListaJogadores = JsonConvert.SerializeObject(listaJogadoresMega, Formatting.Indented);
+        var jsonListaJogadores = JsonSerializer.Serialize(listaJogadoresMega);
 
         File.Create(nomeArquivoJogadores).Close();
         File.AppendAllText(nomeArquivoJogadores, jsonListaJogadores);
@@ -360,7 +367,8 @@ class MegaDoMozao
         var jsonJogadores = File.ReadAllText(nomeArquivoJogadores);
 
         if (new FileInfo(nomeArquivoJogadores).Length > 0) {
-            listaJogadoresMega = JsonConvert.DeserializeObject<List<JogadorMega>>(jsonJogadores);
+            // listaJogadoresMega = JsonConvert.DeserializeObject<List<JogadorMega>>(jsonJogadores);
+            listaJogadoresMega = JsonSerializer.Deserialize<List<JogadorMega>>(jsonJogadores);
 
             foreach (var jogador in listaJogadoresMega)
             {
